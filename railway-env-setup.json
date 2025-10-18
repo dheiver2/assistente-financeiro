@@ -1,0 +1,112 @@
+{
+  "railway_environment_variables": {
+    "required": {
+      "GEMINI_API_KEY": {
+        "description": "API Key do Google Gemini (obrigatória)",
+        "example": "AIzaSyC...",
+        "source": "https://makersuite.google.com/app/apikey",
+        "sensitive": true
+      }
+    },
+    "application": {
+      "GEMINI_MODEL": {
+        "description": "Modelo Gemini a ser utilizado",
+        "default": "gemini-2.0-flash-exp",
+        "options": ["gemini-2.0-flash-exp", "gemini-pro"]
+      },
+      "WHATSAPP_SESSION_NAME": {
+        "description": "Nome único da sessão WhatsApp",
+        "default": "assistente-financeiro-railway",
+        "pattern": "^[a-zA-Z0-9-_]+$"
+      },
+      "NODE_ENV": {
+        "description": "Ambiente de execução",
+        "default": "production",
+        "options": ["production", "development"]
+      }
+    },
+    "puppeteer": {
+      "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": {
+        "description": "Não baixar Chromium (usar Chrome do sistema)",
+        "default": "true",
+        "type": "boolean"
+      },
+      "PUPPETEER_EXECUTABLE_PATH": {
+        "description": "Caminho do Chrome no Railway",
+        "default": "/usr/bin/google-chrome-stable",
+        "railway_specific": true
+      }
+    },
+    "logging": {
+      "LOG_LEVEL": {
+        "description": "Nível de log da aplicação",
+        "default": "info",
+        "options": ["error", "warn", "info", "debug"]
+      },
+      "DEBUG": {
+        "description": "Ativar modo debug detalhado",
+        "default": "false",
+        "type": "boolean"
+      }
+    },
+    "rate_limiting": {
+      "MAX_REQUESTS_PER_MINUTE": {
+        "description": "Limite de requisições por minuto",
+        "default": "30",
+        "type": "number",
+        "min": 10,
+        "max": 100
+      },
+      "ENABLE_RATE_LIMITING": {
+        "description": "Ativar limitação de taxa",
+        "default": "true",
+        "type": "boolean"
+      }
+    },
+    "system": {
+      "TZ": {
+        "description": "Timezone da aplicação",
+        "default": "America/Sao_Paulo",
+        "examples": ["America/Sao_Paulo", "UTC", "America/New_York"]
+      },
+      "PORT": {
+        "description": "Porta da aplicação (Railway define automaticamente)",
+        "railway_managed": true,
+        "note": "Não definir manualmente - Railway gerencia automaticamente"
+      }
+    },
+    "optional": {
+      "NUMERO_AUTORIZADO": {
+        "description": "Números WhatsApp autorizados (vazio = todos)",
+        "default": "",
+        "example": "5511999999999,5511888888888",
+        "note": "Separar múltiplos números por vírgula"
+      }
+    }
+  },
+  "railway_commands": {
+    "set_all_variables": [
+      "railway variables set GEMINI_API_KEY=\"YOUR_API_KEY_HERE\"",
+      "railway variables set GEMINI_MODEL=\"gemini-2.0-flash-exp\"",
+      "railway variables set NODE_ENV=\"production\"",
+      "railway variables set WHATSAPP_SESSION_NAME=\"assistente-financeiro-railway\"",
+      "railway variables set PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=\"true\"",
+      "railway variables set PUPPETEER_EXECUTABLE_PATH=\"/usr/bin/google-chrome-stable\"",
+      "railway variables set LOG_LEVEL=\"info\"",
+      "railway variables set DEBUG=\"false\"",
+      "railway variables set MAX_REQUESTS_PER_MINUTE=\"30\"",
+      "railway variables set ENABLE_RATE_LIMITING=\"true\"",
+      "railway variables set TZ=\"America/Sao_Paulo\""
+    ],
+    "verify_variables": "railway variables",
+    "view_logs": "railway logs --follow",
+    "deploy": "railway up",
+    "status": "railway status"
+  },
+  "validation_rules": {
+    "GEMINI_API_KEY": "^AIza[0-9A-Za-z-_]{35}$",
+    "WHATSAPP_SESSION_NAME": "^[a-zA-Z0-9-_]{3,50}$",
+    "LOG_LEVEL": "^(error|warn|info|debug)$",
+    "MAX_REQUESTS_PER_MINUTE": "^[1-9][0-9]?$|^100$"
+  }
+}

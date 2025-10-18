@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  assistente-financeiro:
+    build: .
+    container_name: assistente-financeiro
+    restart: unless-stopped
+    
+    # Variáveis de ambiente
+    environment:
+      - NODE_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash-exp}
+      - WHATSAPP_SESSION_NAME=${WHATSAPP_SESSION_NAME:-assistente-financeiro}
+      - NUMERO_AUTORIZADO=${NUMERO_AUTORIZADO}
+      - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - MAX_REQUESTS_PER_MINUTE=${MAX_REQUESTS_PER_MINUTE:-30}
+      - ENABLE_RATE_LIMITING=${ENABLE_RATE_LIMITING:-true}
+    
+    # Volumes para persistir sessão WhatsApp
+    volumes:
+      - whatsapp_sessions:/app/.wwebjs_auth
+      - whatsapp_cache:/app/.wwebjs_cache
+    
+    # Configurações de segurança
+    security_opt:
+      - no-new-privileges:true
+    
+    # Limites de recursos
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  whatsapp_sessions:
+    driver: local
+  whatsapp_cache:
+    driver: local
