@@ -4,9 +4,9 @@ FROM node:18-slim
 # Definir diretório de trabalho
 WORKDIR /app
 
-# Copiar package.json e instalar dependências
-COPY package.json .
-RUN npm install --only=production && npm cache clean --force
+# Copiar package.json e package-lock.json e instalar dependências
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copiar código da aplicação
 COPY assistente-temp.js .
