@@ -1,459 +1,263 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
-
 /**
- * Assistente Financeiro Inteligente
- * Utiliza WhatsApp Web.js + Google Gemini 2.0 Flash AI
- * Atende TODOS os números privados (exceto grupos)
+ * Assistente Financeiro - Versão Railway (Simplificada)
+ * Versão otimizada para deploy no Railway sem dependências do Puppeteer
  */
 
-class AssistenteFinanceiro {
-    constructor() {
-        // Configuração do número do bot (usado para logs e identificação)
-        this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        this.model = this.genAI.getGenerativeModel({ 
-            model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp' 
-        });
+const express = require('express');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+// Configurações
+const PORT = process.env.PORT || 3000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+// Validação da chave da API
+if (!GEMINI_API_KEY) {
+    console.error('❌ GEMINI_API_KEY não encontrada nas variáveis de ambiente');
+    process.exit(1);
+}
+
+// Inicialização do Gemini
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+// Configuração do Express
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware de logging
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+});
+
+// Health Check
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        service: 'Assistente Financeiro Railway',
+        version: '1.0.0'
+    });
+});
+
+// Endpoint principal para consultas financeiras
+app.post('/consulta', async (req, res) => {
+    try {
+        const { pergunta } = req.body;
         
-        // Configuração do cliente WhatsApp
-        this.client = new Client({
-            authStrategy: new LocalAuth({
-                clientId: 'assistente-financeiro'
-            }),
-            puppeteer: { 
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--single-process',
-                    '--disable-gpu',
-                    '--disable-background-timer-throttling',
-                    '--disable-backgrounding-occluded-windows',
-                    '--disable-renderer-backgrounding',
-                    '--disable-features=TranslateUI',
-                    '--disable-ipc-flooding-protection',
-                    '--disable-extensions',
-                    '--disable-default-apps',
-                    '--disable-sync',
-                    '--disable-translate',
-                    '--hide-scrollbars',
-                    '--mute-audio',
-                    '--no-default-browser-check',
-                    '--no-pings',
-                    '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor'
-                ],
-                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-                timeout: 60000,
-                protocolTimeout: 60000,
-                handleSIGINT: false,
-                handleSIGTERM: false,
-                handleSIGHUP: false
-            },
-            // Desabilita setUserAgent para Railway
-            userAgent: null
-        });
-
-        this.inicializarEventos();
-        this.promptSistema = this.criarPromptSistema();
-    }
-
-    /**
-     * Cria o prompt do sistema para o assistente financeiro
-     */
-    criarPromptSistema() {
-        return `Você é um Assistente Financeiro Especializado com 15 anos de experiência em:
-
-ESPECIALIDADES:
-- Planejamento financeiro pessoal e empresarial
-- Análise de investimentos (ações, fundos, renda fixa, criptomoedas)
-- Controle de gastos e orçamento familiar
-- Educação financeira e literacia
-- Estratégias de economia e poupança
-- Análise de crédito e financiamentos
-- Impostos e declaração de renda
-- Previdência e aposentadoria
-
-DIRETRIZES DE RESPOSTA:
-1. Seja sempre profissional, claro e didático
-2. Forneça exemplos práticos e cálculos quando relevante
-3. Inclua disclaimers sobre riscos quando necessário
-4. Sugira próximos passos ou ações concretas
-5. Use linguagem acessível, evitando jargões excessivos
-6. Mantenha respostas concisas mas completas (máximo 500 palavras)
-
-FORMATO DE RESPOSTA:
-- Use emojis para organizar informações (💰 📊 📈 ⚠️ 💡)
-- Estruture em tópicos quando apropriado
-- Inclua cálculos simples quando solicitado
-- Termine sempre com uma pergunta ou sugestão de próximo passo
-
-LIMITAÇÕES:
-- Não forneça conselhos de investimento específicos sem análise completa
-- Sempre mencione que recomendações devem ser validadas com profissionais
-- Não prometa retornos garantidos
-- Mantenha-se atualizado com cenário econômico brasileiro
-
-Responda sempre em português brasileiro, de forma amigável mas profissional.`;
-    }
-
-    /**
-     * Inicializa os eventos do WhatsApp
-     */
-    inicializarEventos() {
-        this.client.on('qr', (qr) => {
-            console.log('🔗 QR Code recebido. Escaneie com seu WhatsApp:');
-            console.log(qr);
-        });
-
-        this.client.on('ready', () => {
-            console.log('✅ Assistente Financeiro está online!');
-            console.log('📱 Atendendo: TODOS os números privados (exceto grupos)');
-        });
-
-        this.client.on('authenticated', () => {
-            console.log('🔐 Autenticado com sucesso!');
-        });
-
-        this.client.on('auth_failure', (msg) => {
-            console.error('❌ Falha na autenticação:', msg);
-        });
-
-        this.client.on('message', async (message) => {
-            await this.processarMensagem(message);
-        });
-
-        this.client.on('disconnected', (reason) => {
-            console.log('🔌 Desconectado:', reason);
-        });
-    }
-
-    /**
-     * Processa mensagens recebidas
-     */
-    async processarMensagem(message) {
-        try {
-            // Ignora mensagens do próprio bot
-            if (message.fromMe) return;
-
-            // Verifica se é um número autorizado (privado)
-            if (!this.isNumeroAutorizado(message.from)) {
-                console.log(`🚫 Mensagem ignorada de: ${message.from}`);
-                // Se for grupo, envia mensagem explicativa
-                if (message.from.includes('@g.us')) {
-                    await message.reply('💼 Olá! Atendo apenas conversas privadas para questões financeiras.');
-                }
-                return;
-            }
-
-            console.log(`💬 Mensagem recebida de ${message.from}: ${message.body}`);
-
-            // Verifica comandos especiais
-            if (await this.processarComandosEspeciais(message)) {
-                return;
-            }
-
-            // Processa com IA Gemini
-            await this.responderComIA(message);
-
-        } catch (error) {
-            console.error('❌ Erro ao processar mensagem:', error);
-            await message.reply('⚠️ Desculpe, ocorreu um erro interno. Tente novamente em alguns instantes.');
+        if (!pergunta) {
+            return res.status(400).json({
+                error: 'Pergunta é obrigatória',
+                example: { pergunta: 'Como calcular juros compostos?' }
+            });
         }
-    }
 
-    /**
-     * Verifica se o número está autorizado a usar o assistente
-     * @param {string} numeroCompleto - Número no formato WhatsApp
-     * @returns {boolean}
-     */
-    isNumeroAutorizado(numeroCompleto) {
-        // Aceita qualquer número privado (não grupos)
-        // Bloqueia apenas grupos (@g.us) e status (@broadcast)
-        if (numeroCompleto.includes('@g.us') || numeroCompleto.includes('@broadcast')) {
-            return false;
-        }
+        const prompt = `
+Você é um assistente financeiro especializado. Responda de forma clara e didática.
+
+Pergunta: ${pergunta}
+
+Forneça uma resposta completa incluindo:
+1. Explicação conceitual
+2. Fórmulas relevantes (se aplicável)
+3. Exemplo prático
+4. Dicas importantes
+
+Mantenha a resposta focada e útil.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const resposta = response.text();
+
+        res.json({
+            pergunta,
+            resposta,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('Erro ao processar consulta:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            message: error.message
+        });
+    }
+});
+
+// Endpoint para cálculos financeiros específicos
+app.post('/calculo/:tipo', async (req, res) => {
+    try {
+        const { tipo } = req.params;
+        const dados = req.body;
+
+        let resultado;
         
-        // Aceita todos os números privados (@c.us)
-        return numeroCompleto.includes('@c.us');
-    }
-
-    /**
-     * Processa comandos especiais
-     */
-    async processarComandosEspeciais(message) {
-        const comando = message.body.toLowerCase().trim();
-
-        switch (comando) {
-            case '/start':
-            case '/inicio':
-                await this.enviarBoasVindas(message);
-                return true;
-
-            case '/help':
-            case '/ajuda':
-                await this.enviarAjuda(message);
-                return true;
-
-            case '/calculadora':
-                await this.enviarCalculadora(message);
-                return true;
-
-            case '/dicas':
-                await this.enviarDicasRapidas(message);
-                return true;
-
+        switch (tipo) {
+            case 'juros-simples':
+                resultado = calcularJurosSimples(dados);
+                break;
+            case 'juros-compostos':
+                resultado = calcularJurosCompostos(dados);
+                break;
+            case 'financiamento':
+                resultado = calcularFinanciamento(dados);
+                break;
             default:
-                return false;
+                return res.status(400).json({
+                    error: 'Tipo de cálculo não suportado',
+                    tipos_disponiveis: ['juros-simples', 'juros-compostos', 'financiamento']
+                });
         }
+
+        res.json({
+            tipo,
+            dados,
+            resultado,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('Erro no cálculo:', error);
+        res.status(500).json({
+            error: 'Erro no cálculo',
+            message: error.message
+        });
     }
+});
 
-    /**
-     * Envia mensagem de boas-vindas
-     */
-    async enviarBoasVindas(message) {
-        const boasVindas = `🏦 *Assistente Financeiro Inteligente*
-
-Olá! Sou seu assistente financeiro pessoal, especializado em:
-
-💰 *Planejamento Financeiro*
-📊 *Análise de Investimentos*
-📈 *Controle de Gastos*
-🎯 *Educação Financeira*
-💡 *Estratégias de Economia*
-
-*Comandos Disponíveis:*
-• /ajuda - Lista de comandos
-• /calculadora - Ferramentas de cálculo
-• /dicas - Dicas financeiras rápidas
-
-*Como usar:*
-Envie suas dúvidas financeiras em linguagem natural. Exemplo:
-"Como investir R$ 1000 com baixo risco?"
-"Qual a melhor estratégia para quitar dívidas?"
-
-Estou aqui para ajudar! 🚀`;
-
-        await message.reply(boasVindas);
+// Funções de cálculo financeiro
+function calcularJurosSimples({ capital, taxa, tempo }) {
+    if (!capital || !taxa || !tempo) {
+        throw new Error('Capital, taxa e tempo são obrigatórios');
     }
+    
+    const juros = capital * (taxa / 100) * tempo;
+    const montante = capital + juros;
+    
+    return {
+        capital: parseFloat(capital),
+        taxa: parseFloat(taxa),
+        tempo: parseFloat(tempo),
+        juros: parseFloat(juros.toFixed(2)),
+        montante: parseFloat(montante.toFixed(2)),
+        formula: 'J = C × i × t'
+    };
+}
 
-    /**
-     * Envia menu de ajuda
-     */
-    async enviarAjuda(message) {
-        const ajuda = `📋 *Menu de Ajuda - Assistente Financeiro*
-
-*🔧 Comandos Disponíveis:*
-• /inicio - Mensagem de boas-vindas
-• /ajuda - Este menu
-• /calculadora - Ferramentas de cálculo
-• /dicas - Dicas financeiras
-
-*💬 Exemplos de Perguntas:*
-• "Como fazer um orçamento familiar?"
-• "Qual o melhor investimento para iniciantes?"
-• "Como calcular juros compostos?"
-• "Estratégias para sair das dívidas"
-• "Como declarar imposto de renda?"
-
-*⚡ Funcionalidades:*
-✅ Análise financeira personalizada
-✅ Cálculos automáticos
-✅ Dicas de investimento
-✅ Planejamento de orçamento
-✅ Educação financeira
-
-Envie sua dúvida e receba uma resposta especializada! 💼`;
-
-        await message.reply(ajuda);
+function calcularJurosCompostos({ capital, taxa, tempo }) {
+    if (!capital || !taxa || !tempo) {
+        throw new Error('Capital, taxa e tempo são obrigatórios');
     }
+    
+    const montante = capital * Math.pow(1 + (taxa / 100), tempo);
+    const juros = montante - capital;
+    
+    return {
+        capital: parseFloat(capital),
+        taxa: parseFloat(taxa),
+        tempo: parseFloat(tempo),
+        juros: parseFloat(juros.toFixed(2)),
+        montante: parseFloat(montante.toFixed(2)),
+        formula: 'M = C × (1 + i)^t'
+    };
+}
 
-    /**
-     * Envia opções de calculadora
-     */
-    async enviarCalculadora(message) {
-        const calculadora = `🧮 *Calculadoras Financeiras*
-
-Envie sua solicitação de cálculo:
-
-*📊 Disponíveis:*
-• Juros compostos
-• Financiamento (SAC/Price)
-• Rendimento de investimentos
-• Inflação e poder de compra
-• Aposentadoria
-• Valor presente/futuro
-
-*💡 Exemplo de uso:*
-"Calcule juros compostos de R$ 1000 a 1% ao mês por 12 meses"
-
-"Quanto preciso investir mensalmente para ter R$ 100.000 em 10 anos com 10% ao ano?"
-
-Qual cálculo você gostaria de fazer? 🤔`;
-
-        await message.reply(calculadora);
+function calcularFinanciamento({ valor, taxa, parcelas }) {
+    if (!valor || !taxa || !parcelas) {
+        throw new Error('Valor, taxa e número de parcelas são obrigatórios');
     }
+    
+    const taxaMensal = taxa / 100;
+    const prestacao = valor * (taxaMensal * Math.pow(1 + taxaMensal, parcelas)) / 
+                     (Math.pow(1 + taxaMensal, parcelas) - 1);
+    const totalPago = prestacao * parcelas;
+    const totalJuros = totalPago - valor;
+    
+    return {
+        valor_financiado: parseFloat(valor),
+        taxa_mensal: parseFloat(taxa),
+        numero_parcelas: parseInt(parcelas),
+        valor_prestacao: parseFloat(prestacao.toFixed(2)),
+        total_pago: parseFloat(totalPago.toFixed(2)),
+        total_juros: parseFloat(totalJuros.toFixed(2)),
+        formula: 'PMT = PV × [(i × (1+i)^n) / ((1+i)^n - 1)]'
+    };
+}
 
-    /**
-     * Envia dicas financeiras rápidas
-     */
-    async enviarDicasRapidas(message) {
-        const dicas = [
-            "💰 *Regra 50-30-20:* 50% necessidades, 30% desejos, 20% poupança",
-            "📈 *Diversificação:* Nunca coloque todos os ovos na mesma cesta",
-            "🎯 *Reserva de emergência:* 6 meses de gastos essenciais",
-            "📊 *Renda fixa primeiro:* Construa base sólida antes de arriscar",
-            "💡 *Educação financeira:* Invista em conhecimento primeiro",
-            "⚡ *Automatize:* Configure investimentos automáticos",
-            "🔍 *Compare sempre:* Taxas, tarifas e condições",
-            "📱 *Controle gastos:* Use apps para monitorar despesas"
-        ];
-
-        const dicaAleatoria = dicas[Math.floor(Math.random() * dicas.length)];
-        
-        await message.reply(`💡 *Dica Financeira do Dia*\n\n${dicaAleatoria}\n\n_Quer mais dicas personalizadas? Envie sua situação financeira!_`);
-    }
-
-    /**
-     * Responde usando IA Gemini
-     */
-    async responderComIA(message) {
-        try {
-            // Mostra que está digitando
-            await message.reply('💭 Analisando sua questão financeira...');
-
-            // Prepara o prompt completo
-            const promptCompleto = `${this.promptSistema}
-
-PERGUNTA DO USUÁRIO:
-${message.body}
-
-Responda de forma profissional e útil:`;
-
-            // Gera resposta com Gemini
-            const result = await this.model.generateContent(promptCompleto);
-            const resposta = result.response.text();
-
-            // Adiciona assinatura
-            const respostaFinal = `${resposta}
-
----
-🤖 *Assistente Financeiro IA*
-_Dúvidas? Continue perguntando!_`;
-
-            await message.reply(respostaFinal);
-
-        } catch (error) {
-            console.error('❌ Erro na IA:', error);
-            await message.reply('⚠️ Desculpe, não consegui processar sua pergunta no momento. Tente reformular ou tente novamente.');
-        }
-    }
-
-    /**
-     * Inicia o assistente
-     */
-    async iniciar() {
-        const maxRetries = 3;
-        let currentRetry = 0;
-        
-        while (currentRetry < maxRetries) {
-            try {
-                console.log(`🚀 Iniciando Assistente Financeiro... (Tentativa ${currentRetry + 1}/${maxRetries})`);
-                
-                // Verifica se a API key do Gemini está configurada
-                if (!process.env.GEMINI_API_KEY) {
-                    throw new Error('GEMINI_API_KEY não configurada no arquivo .env');
-                }
-
-                // Aguarda um pouco antes de tentar inicializar
-                if (currentRetry > 0) {
-                    const waitTime = currentRetry * 5000; // 5s, 10s, 15s...
-                    console.log(`⏳ Aguardando ${waitTime/1000}s antes da próxima tentativa...`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                }
-
-                await this.client.initialize();
-                console.log('✅ Assistente Financeiro iniciado com sucesso!');
-                return; // Sucesso, sai do loop
-                
-            } catch (error) {
-                currentRetry++;
-                console.error(`❌ Erro ao iniciar (tentativa ${currentRetry}/${maxRetries}):`, error.message);
-                
-                // Se não é a última tentativa, continua o loop
-                if (currentRetry < maxRetries) {
-                    console.log('🔄 Tentando novamente...');
-                    
-                    // Limpa recursos se necessário
-                    try {
-                        if (this.client && this.client.pupBrowser) {
-                            await this.client.pupBrowser.close();
-                        }
-                    } catch (cleanupError) {
-                        console.warn('⚠️ Erro ao limpar recursos:', cleanupError.message);
-                    }
-                    
-                    // Recria o client para a próxima tentativa
-                    this.client = new Client({
-                        authStrategy: new LocalAuth({
-                            clientId: 'assistente-financeiro'
-                        }),
-                        puppeteer: { 
-                            headless: true,
-                            args: [
-                                '--no-sandbox',
-                                '--disable-setuid-sandbox',
-                                '--disable-dev-shm-usage',
-                                '--disable-accelerated-2d-canvas',
-                                '--no-first-run',
-                                '--no-zygote',
-                                '--single-process',
-                                '--disable-gpu',
-                                '--disable-background-timer-throttling',
-                                '--disable-backgrounding-occluded-windows',
-                                '--disable-renderer-backgrounding',
-                                '--disable-features=TranslateUI',
-                                '--disable-ipc-flooding-protection',
-                                '--disable-extensions',
-                                '--disable-default-apps',
-                                '--disable-sync',
-                                '--disable-translate',
-                                '--hide-scrollbars',
-                                '--mute-audio',
-                                '--no-default-browser-check',
-                                '--no-pings',
-                                '--disable-web-security',
-                                '--disable-features=VizDisplayCompositor'
-                            ],
-                            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-                            timeout: 60000,
-                            protocolTimeout: 60000,
-                            handleSIGINT: false,
-                            handleSIGTERM: false,
-                            handleSIGHUP: false
-                        }
-                    });
-                    
-                    this.inicializarEventos();
-                } else {
-                    // Última tentativa falhou
-                    console.error('💥 Falha crítica: Não foi possível inicializar após todas as tentativas');
-                    process.exit(1);
-                }
+// Endpoint de documentação
+app.get('/', (req, res) => {
+    res.json({
+        service: 'Assistente Financeiro Railway',
+        version: '1.0.0',
+        endpoints: {
+            'GET /health': 'Health check do serviço',
+            'POST /consulta': 'Consulta geral ao assistente financeiro',
+            'POST /calculo/juros-simples': 'Cálculo de juros simples',
+            'POST /calculo/juros-compostos': 'Cálculo de juros compostos',
+            'POST /calculo/financiamento': 'Cálculo de financiamento'
+        },
+        examples: {
+            consulta: {
+                method: 'POST',
+                url: '/consulta',
+                body: { pergunta: 'Como funciona o CDI?' }
+            },
+            juros_simples: {
+                method: 'POST',
+                url: '/calculo/juros-simples',
+                body: { capital: 1000, taxa: 5, tempo: 12 }
             }
         }
+    });
+});
+
+// Tratamento de erros global
+app.use((error, req, res, next) => {
+    console.error('Erro não tratado:', error);
+    res.status(500).json({
+        error: 'Erro interno do servidor',
+        message: error.message
+    });
+});
+
+// Inicialização do servidor
+async function iniciarServidor() {
+    try {
+        // Teste da conexão com Gemini
+        console.log('🔍 Testando conexão com Gemini...');
+        const testResult = await model.generateContent('Teste de conexão');
+        console.log('✅ Conexão com Gemini estabelecida');
+
+        // Iniciar servidor
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log('🚀 Assistente Financeiro Railway iniciado!');
+            console.log(`📡 Servidor rodando na porta ${PORT}`);
+            console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+            console.log(`📚 Documentação: http://localhost:${PORT}/`);
+            console.log('✅ Serviço pronto para receber requisições');
+        });
+
+    } catch (error) {
+        console.error('❌ Erro ao iniciar servidor:', error);
+        process.exit(1);
     }
 }
 
-// Inicialização
-if (require.main === module) {
-    const assistente = new AssistenteFinanceiro();
-    assistente.iniciar();
-}
+// Tratamento de sinais do sistema
+process.on('SIGTERM', () => {
+    console.log('🛑 Recebido SIGTERM, encerrando servidor...');
+    process.exit(0);
+});
 
-module.exports = AssistenteFinanceiro;
+process.on('SIGINT', () => {
+    console.log('🛑 Recebido SIGINT, encerrando servidor...');
+    process.exit(0);
+});
+
+// Iniciar aplicação
+iniciarServidor().catch(error => {
+    console.error('💥 Falha crítica na inicialização:', error);
+    process.exit(1);
+});
