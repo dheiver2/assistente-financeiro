@@ -1,16 +1,15 @@
 {
-  "name": "assistente-financeiro-hibrido",
-  "version": "2.0.0",
-  "description": "Assistente Financeiro Híbrido - API REST + WhatsApp com Google Gemini AI",
-  "main": "assistente-hibrido.js",
+  "name": "assistente-financeiro-temp",
+  "version": "2.0.0-temp",
+  "description": "Assistente Financeiro - API REST Temporária (sem WhatsApp)",
+  "main": "assistente-temp.js",
   "scripts": {
-    "start": "node assistente-hibrido.js",
-    "dev": "node assistente-hibrido.js",
-    "railway:start": "node assistente-hibrido.js",
+    "start": "node assistente-temp.js",
+    "dev": "node assistente-temp.js",
+    "railway:start": "node assistente-temp.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
-    "whatsapp",
     "api",
     "financial",
     "assistant",
@@ -23,20 +22,10 @@
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "whatsapp-web.js": "^1.23.0",
     "@google/generative-ai": "^0.21.0",
-    "qrcode-terminal": "^0.12.0",
     "dotenv": "^16.4.5"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/seu-usuario/assistente-financeiro"
-  },
-  "bugs": {
-    "url": "https://github.com/seu-usuario/assistente-financeiro/issues"
-  },
-  "homepage": "https://github.com/seu-usuario/assistente-financeiro#readme"
+  }
 }
