@@ -1,4 +1,4 @@
-# .dockerignore - Assistente Financeiro
+# .dockerignore - Assistente Financeiro com Baileys
 
 # Node.js
 node_modules
@@ -38,15 +38,44 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file (será copiado via docker-compose)
-.env.local
-.env.development
-.env.test
-.env.production
+# Environment files (serão configurados via Railway)
+.env*
 
-# WhatsApp sessions (serão criadas no container)
-.wwebjs_auth/
-.wwebjs_cache/
+# Baileys auth sessions (serão criadas no container)
+baileys_auth/
+.baileys_auth/
+
+# Git e desenvolvimento
+.git
+.github
+.gitignore
+
+# Documentação e arquivos desnecessários
+docs/
+tests/
+tools/
+*.md
+LICENSE
+
+# Scripts de deploy
+*.ps1
+*.sh
+
+# Arquivos de configuração de desenvolvimento
+.editorconfig
+.eslintrc.json
+.jsdoc.json
+.npmignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Arquivos temporários e backup
+*backup*
+*temp*
+*old*
 
 # Git
 .git
