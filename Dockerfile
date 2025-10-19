@@ -19,7 +19,6 @@ RUN npm install --production && npm cache clean --force
 
 # Copiar código da aplicação
 COPY assistente-baileys.js .
-COPY calculadoras-financeiras.js .
 
 # Criar diretório para autenticação do Baileys
 RUN mkdir -p baileys_auth && chown -R appuser:appuser /app
