@@ -2,18 +2,18 @@
   "name": "assistente-financeiro-whatsapp",
   "version": "2.0.0",
   "description": "Assistente Financeiro WhatsApp com Gemini 2.0 Flash - Deploy Railway",
-  "main": "assistente-financeiro.js",
+  "main": "assistente-railway.js",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "start": "node assistente-financeiro.js",
-    "dev": "node assistente-financeiro.js",
+    "start": "node assistente-railway.js",
+    "dev": "node assistente-railway.js",
     "test": "node teste-gemini-2-flash.js",
     "health": "node health-check.js",
     "build": "echo 'Build completed - No build step required'",
-    "railway:start": "node assistente-financeiro.js"
+    "railway:start": "node assistente-railway.js"
   },
   "repository": {
     "type": "git",
