@@ -1,21 +1,23 @@
 {
-  "name": "assistente-financeiro-temp",
-  "version": "2.0.0-temp",
-  "description": "Assistente Financeiro - API REST Temporária (sem WhatsApp)",
-  "main": "assistente-temp.js",
+  "name": "assistente-financeiro-hibrido",
+  "version": "2.0.0",
+  "description": "Assistente Financeiro Híbrido - API REST + WhatsApp",
+  "main": "assistente-hibrido.js",
   "scripts": {
-    "start": "node assistente-temp.js",
-    "dev": "node assistente-temp.js",
-    "railway:start": "node assistente-temp.js",
+    "start": "node assistente-hibrido.js",
+    "dev": "node assistente-hibrido.js",
+    "railway:start": "node assistente-hibrido.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
     "api",
     "financial",
     "assistant",
+    "whatsapp",
     "gemini",
     "ai",
-    "railway"
+    "railway",
+    "puppeteer"
   ],
   "author": "Assistente RefactorMind",
   "license": "MIT",
@@ -23,7 +25,10 @@
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "@google/generative-ai": "^0.21.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "whatsapp-web.js": "^1.34.1",
+    "qrcode-terminal": "^0.12.0",
+    "puppeteer": "^21.11.0"
   },
   "engines": {
     "node": ">=18.0.0"
