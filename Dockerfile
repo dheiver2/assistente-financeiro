@@ -17,7 +17,7 @@ COPY package-lock.json* ./
 RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi && npm cache clean --force
 
 # Copiar arquivos da aplicação
-COPY assistente-railway.js .
+COPY assistente-financeiro.js .
 COPY calculadoras-financeiras.js .
 COPY health-check.js .
 COPY railway.json .
@@ -26,4 +26,4 @@ COPY railway.json .
 EXPOSE 3000
 
 # Comando para iniciar a aplicação
-CMD ["node", "assistente-railway.js"]
+CMD ["node", "assistente-financeiro.js"]
