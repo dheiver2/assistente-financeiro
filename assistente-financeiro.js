@@ -34,8 +34,26 @@ class AssistenteFinanceiro {
                     '--disable-gpu',
                     '--disable-background-timer-throttling',
                     '--disable-backgrounding-occluded-windows',
-                    '--disable-renderer-backgrounding'
-                ]
+                    '--disable-renderer-backgrounding',
+                    '--disable-features=TranslateUI',
+                    '--disable-ipc-flooding-protection',
+                    '--disable-extensions',
+                    '--disable-default-apps',
+                    '--disable-sync',
+                    '--disable-translate',
+                    '--hide-scrollbars',
+                    '--mute-audio',
+                    '--no-default-browser-check',
+                    '--no-pings',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
+                ],
+                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+                timeout: 60000,
+                protocolTimeout: 60000,
+                handleSIGINT: false,
+                handleSIGTERM: false,
+                handleSIGHUP: false
             }
         });
 
@@ -338,19 +356,94 @@ _Dúvidas? Continue perguntando!_`;
      * Inicia o assistente
      */
     async iniciar() {
-        try {
-            console.log('🚀 Iniciando Assistente Financeiro...');
-            
-            // Verifica se a API key do Gemini está configurada
-            if (!process.env.GEMINI_API_KEY) {
-                throw new Error('GEMINI_API_KEY não configurada no arquivo .env');
-            }
+        const maxRetries = 3;
+        let currentRetry = 0;
+        
+        while (currentRetry < maxRetries) {
+            try {
+                console.log(`🚀 Iniciando Assistente Financeiro... (Tentativa ${currentRetry + 1}/${maxRetries})`);
+                
+                // Verifica se a API key do Gemini está configurada
+                if (!process.env.GEMINI_API_KEY) {
+                    throw new Error('GEMINI_API_KEY não configurada no arquivo .env');
+                }
 
-            await this.client.initialize();
-            
-        } catch (error) {
-            console.error('❌ Erro ao iniciar:', error);
-            process.exit(1);
+                // Aguarda um pouco antes de tentar inicializar
+                if (currentRetry > 0) {
+                    const waitTime = currentRetry * 5000; // 5s, 10s, 15s...
+                    console.log(`⏳ Aguardando ${waitTime/1000}s antes da próxima tentativa...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                }
+
+                await this.client.initialize();
+                console.log('✅ Assistente Financeiro iniciado com sucesso!');
+                return; // Sucesso, sai do loop
+                
+            } catch (error) {
+                currentRetry++;
+                console.error(`❌ Erro ao iniciar (tentativa ${currentRetry}/${maxRetries}):`, error.message);
+                
+                // Se não é a última tentativa, continua o loop
+                if (currentRetry < maxRetries) {
+                    console.log('🔄 Tentando novamente...');
+                    
+                    // Limpa recursos se necessário
+                    try {
+                        if (this.client && this.client.pupBrowser) {
+                            await this.client.pupBrowser.close();
+                        }
+                    } catch (cleanupError) {
+                        console.warn('⚠️ Erro ao limpar recursos:', cleanupError.message);
+                    }
+                    
+                    // Recria o client para a próxima tentativa
+                    this.client = new Client({
+                        authStrategy: new LocalAuth({
+                            clientId: 'assistente-financeiro'
+                        }),
+                        puppeteer: { 
+                            headless: true,
+                            args: [
+                                '--no-sandbox',
+                                '--disable-setuid-sandbox',
+                                '--disable-dev-shm-usage',
+                                '--disable-accelerated-2d-canvas',
+                                '--no-first-run',
+                                '--no-zygote',
+                                '--single-process',
+                                '--disable-gpu',
+                                '--disable-background-timer-throttling',
+                                '--disable-backgrounding-occluded-windows',
+                                '--disable-renderer-backgrounding',
+                                '--disable-features=TranslateUI',
+                                '--disable-ipc-flooding-protection',
+                                '--disable-extensions',
+                                '--disable-default-apps',
+                                '--disable-sync',
+                                '--disable-translate',
+                                '--hide-scrollbars',
+                                '--mute-audio',
+                                '--no-default-browser-check',
+                                '--no-pings',
+                                '--disable-web-security',
+                                '--disable-features=VizDisplayCompositor'
+                            ],
+                            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+                            timeout: 60000,
+                            protocolTimeout: 60000,
+                            handleSIGINT: false,
+                            handleSIGTERM: false,
+                            handleSIGHUP: false
+                        }
+                    });
+                    
+                    this.inicializarEventos();
+                } else {
+                    // Última tentativa falhou
+                    console.error('💥 Falha crítica: Não foi possível inicializar após todas as tentativas');
+                    process.exit(1);
+                }
+            }
         }
     }
 }
