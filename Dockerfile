@@ -21,10 +21,12 @@ WORKDIR /app
 
 # Copiar package.json específico para assistente
 COPY package-assistente.json package.json
-COPY package-lock.json package-lock.json
 
-# Instalar dependências
-RUN npm ci --omit=dev && npm cache clean --force
+# Copiar package-lock.json se existir, senão usar npm install
+COPY package-lock.json* ./
+
+# Instalar dependências (usar npm install se package-lock.json não existir)
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi && npm cache clean --force
 
 # Copiar código da aplicação
 COPY assistente-financeiro.js .
