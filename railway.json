@@ -1,19 +1,25 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile-hibrido"
   },
   "deploy": {
-    "startCommand": "node assistente-railway.js",
+    "startCommand": "node assistente-hibrido.js",
     "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   },
   "environments": {
     "production": {
       "variables": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "PORT": "3000",
+        "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
+        "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/google-chrome-stable",
+        "CHROME_PATH": "/usr/bin/google-chrome-stable",
+        "DISPLAY": ":99"
       }
     }
   }

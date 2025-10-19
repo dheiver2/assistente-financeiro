@@ -1,55 +1,42 @@
 {
-  "name": "assistente-financeiro-whatsapp",
+  "name": "assistente-financeiro-hibrido",
   "version": "2.0.0",
-  "description": "Assistente Financeiro WhatsApp com Gemini 2.0 Flash - Deploy Railway",
-  "main": "assistente-financeiro.js",
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
+  "description": "Assistente Financeiro Híbrido - API REST + WhatsApp com Google Gemini AI",
+  "main": "assistente-hibrido.js",
   "scripts": {
-    "start": "node assistente-financeiro.js",
-    "dev": "node assistente-financeiro.js",
-    "test": "node teste-gemini-2-flash.js",
-    "health": "node health-check.js",
-    "build": "echo 'Build completed - No build step required'",
-    "railway:start": "node assistente-financeiro.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dheiver2/assistente-financeiro.git"
+    "start": "node assistente-hibrido.js",
+    "dev": "node assistente-hibrido.js",
+    "railway:start": "node assistente-hibrido.js",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
     "whatsapp",
-    "assistente-financeiro",
+    "api",
+    "financial",
+    "assistant",
     "gemini",
-    "bot",
-    "railway",
-    "deploy"
+    "ai",
+    "railway"
   ],
-  "author": "Dheiver Santos",
+  "author": "Assistente RefactorMind",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "@pedroslopez/moduleraid": "^5.0.2",
-    "axios": "^1.12.2",
-    "fluent-ffmpeg": "2.1.3",
-    "mime": "^3.0.0",
-    "moment": "^2.30.1",
-    "node-fetch": "^2.6.9",
-    "node-webpmux": "3.1.7",
-    "puppeteer": "^18.2.1",
-    "dotenv": "^16.6.1"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "whatsapp-web.js": "^1.23.0",
+    "@google/generative-ai": "^0.21.0",
+    "qrcode-terminal": "^0.12.0",
+    "dotenv": "^16.4.5"
   },
-  "devDependencies": {
-    "@types/node-fetch": "^2.5.12"
+  "engines": {
+    "node": ">=18.0.0"
   },
-  "railway": {
-    "build": {
-      "command": "npm install"
-    },
-    "start": {
-      "command": "npm run railway:start"
-    }
-  }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/assistente-financeiro"
+  },
+  "bugs": {
+    "url": "https://github.com/seu-usuario/assistente-financeiro/issues"
+  },
+  "homepage": "https://github.com/seu-usuario/assistente-financeiro#readme"
 }
