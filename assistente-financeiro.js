@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('./index');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
