@@ -21,9 +21,10 @@ WORKDIR /app
 
 # Copiar package.json específico para assistente
 COPY package-assistente.json package.json
+COPY package-lock.json package-lock.json
 
 # Instalar dependências
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copiar código da aplicação
 COPY assistente-financeiro.js .
