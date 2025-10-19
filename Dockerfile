@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copiar package.json e instalar dependências
 COPY package.json .
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Copiar código da aplicação
 COPY assistente-temp.js .
