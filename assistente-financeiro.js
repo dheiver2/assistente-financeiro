@@ -54,7 +54,9 @@ class AssistenteFinanceiro {
                 handleSIGINT: false,
                 handleSIGTERM: false,
                 handleSIGHUP: false
-            }
+            },
+            // Desabilita setUserAgent para Railway
+            userAgent: null
         });
 
         this.inicializarEventos();
