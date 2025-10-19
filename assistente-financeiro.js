@@ -22,8 +22,20 @@ class AssistenteFinanceiro {
                 clientId: 'assistente-financeiro'
             }),
             puppeteer: { 
-                headless: false,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--single-process',
+                    '--disable-gpu',
+                    '--disable-background-timer-throttling',
+                    '--disable-backgrounding-occluded-windows',
+                    '--disable-renderer-backgrounding'
+                ]
             }
         });
 
