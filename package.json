@@ -1,12 +1,12 @@
 {
-  "name": "assistente-financeiro-hibrido",
-  "version": "2.0.0",
-  "description": "Assistente Financeiro Híbrido - API REST + WhatsApp",
-  "main": "assistente-hibrido.js",
+  "name": "assistente-financeiro-baileys",
+  "version": "3.0.0",
+  "description": "Assistente Financeiro Híbrido - API REST + WhatsApp com Baileys",
+  "main": "assistente-baileys.js",
   "scripts": {
-    "start": "node assistente-hibrido.js",
-    "dev": "node assistente-hibrido.js",
-    "railway:start": "node assistente-hibrido.js",
+    "start": "node assistente-baileys.js",
+    "dev": "node assistente-baileys.js",
+    "railway:start": "node assistente-baileys.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
@@ -17,7 +17,7 @@
     "gemini",
     "ai",
     "railway",
-    "puppeteer"
+    "baileys"
   ],
   "author": "Assistente RefactorMind",
   "license": "MIT",
@@ -26,9 +26,9 @@
     "cors": "^2.8.5",
     "@google/generative-ai": "^0.21.0",
     "dotenv": "^16.4.5",
-    "whatsapp-web.js": "^1.34.1",
-    "qrcode-terminal": "^0.12.0",
-    "puppeteer": "^21.11.0"
+    "@whiskeysockets/baileys": "^6.7.8",
+    "@hapi/boom": "^10.0.1",
+    "qrcode": "^1.5.3"
   },
   "engines": {
     "node": ">=18.0.0"
