@@ -1,0 +1,22 @@
+# Arquivos antigos que não devem ser incluídos no deploy
+assistente-hibrido.js
+assistente-temp.js
+assistente-financeiro.js
+assistente-financeiro-old.js
+
+# Diretórios de desenvolvimento
+node_modules/
+.git/
+.env
+*.log
+
+# Arquivos de backup
+*backup*
+*old*
+*temp*
+
+# Sessões antigas do WhatsApp
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Apenas manter arquivos essenciais do Baileys

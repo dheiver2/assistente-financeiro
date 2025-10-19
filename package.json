@@ -1,7 +1,7 @@
 {
-  "name": "assistente-financeiro-baileys",
-  "version": "3.0.0",
-  "description": "Assistente Financeiro Híbrido - API REST + WhatsApp com Baileys",
+  "name": "assistente-whatsapp-baileys",
+  "version": "4.0.0",
+  "description": "Assistente WhatsApp com Baileys - Tecnologia Moderna",
   "main": "assistente-baileys.js",
   "scripts": {
     "start": "node assistente-baileys.js",
