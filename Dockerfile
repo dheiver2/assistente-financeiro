@@ -35,20 +35,16 @@ COPY assistente-hibrido.js .
 COPY calculadoras-financeiras.js .
 
 # Criar diretório para sessão do WhatsApp
-RUN mkdir -p /app/.wwebjs_auth && chown -R pptruser:pptruser /app/.wwebjs_auth
+RUN mkdir -p /app/.wwebjs_auth
 
 # Configurar variáveis de ambiente para Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-ENV CHROME_PATH=/usr/bin/google-chrome-stable
-ENV DISPLAY=:99
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV CHROME_PATH=/usr/bin/chromium
 
 # Configurações para Railway
 ENV NODE_ENV=production
 ENV PORT=3000
-
-# Mudar para usuário não-root
-USER pptruser
 
 # Expor porta
 EXPOSE 3000
